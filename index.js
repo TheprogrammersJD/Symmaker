@@ -21,6 +21,7 @@ var roomnum = 0;
 var playersonline = 0;
 var roomlimit = 3;//The number of people allowed in each room
 var roomwidth = 1000;
+var roomheight = 1000;
 
 io.on('connection', function(socket){
 	console.log('User ' + socket.id + ' connected.');
@@ -29,6 +30,7 @@ io.on('connection', function(socket){
 	socket.broadcast.emit('player', players[playernum]);
 
 	io.to(socket.id).emit('youare', players[socketids.indexOf(socket.id)]);
+	io.to(socket.id).emit('roomsize', roomwidth, roomheight);
 	io.to(socket.id).emit('playersonline', playersonline);
 	playernum++;
 	playersonline++;
@@ -40,6 +42,7 @@ io.on('connection', function(socket){
 	socket.on('ready', function(id){
 		for(var p = 0; p < players.length; p++){
 			if(players[p].id == id){
+				players[p].ready = true;
 				if(rooms.length < 1){ //If there are no rooms
 					socket.join('room'+roomnum);//
 					io.to(socket.id).emit('yourroom', roomnum);
@@ -71,7 +74,7 @@ io.on('connection', function(socket){
 						}
 					}
 				}
-				players[p].x = getRandomArbitrary(0, roomwidth);
+				
 				for(var pir = 0; pir < players.length; pir++){
 					if(players[pir].room == players[p].room&&players[pir].online == true&&players[p].room != null){
 						if(players[pir].id != socket.id){
@@ -83,6 +86,38 @@ io.on('connection', function(socket){
 			}
 			else{}
 		}	
+	});
+	
+	socket.on('mrqst', function(angle, quad){
+		for(var mp = 0; mp < players.length; mp++){
+			if(players[mp].alive == true&&players[mp].id == socket.id){//&&players[mp].x<1000&&players[mp].y<1000&&players[mp].x>0&&players[mp].y>0
+				//io.to(players[mp].room).emit('move', socket.id, players[mp].x, players[mp].y);
+				//socket.broadcast.emit('move', socket.id, players[mp].x, players[mp].y);
+				//io.to(socket.id).emit('move', socket.id, players[mp].x, players[mp].y);
+				if(angle < 0&&quad == 1&&players[mp].x<roomwidth&&players[mp].y>0){
+					players[mp].x -= (Math.sin(angle));
+					players[mp].y -= (Math.cos(angle));
+				}
+				
+				if(angle > 0&&quad == 2&&players[mp].x>0&&players[mp].y>0){
+					players[mp].x -= (Math.sin(angle));
+					players[mp].y -= (Math.cos(angle));
+				}
+				
+				if(angle < 0&&quad == 3&&players[mp].x>0&&players[mp].y<roomheight){
+					players[mp].x += (Math.sin(angle));
+					players[mp].y += (Math.cos(angle));
+				}
+				
+				if(angle > 0&&quad == 4&&players[mp].x<roomwidth&&players[mp].y<roomheight){
+					players[mp].x += (Math.sin(angle));
+					players[mp].y += (Math.cos(angle));
+				}
+				
+				
+				socket.emit('move', socket.id, players[mp].x, players[mp].y);
+			}
+		}
 	});
 	
 	socket.on('disconnect', function(){
@@ -113,13 +148,15 @@ function getRandomArbitrary(min, max) {
 function player(id){
 	this.name = adjectives[(Math.ceil(Math.random()*adjectives.length))-1]+"-"+nouns[(Math.ceil(Math.random()*nouns.length))-1]+"-"+(Math.ceil(Math.random()*1000));
 	this.id = id;
-	this.x = 0;
-	this.y = 0;
+	this.x = getRandomArbitrary(0, roomwidth);
+	this.y = getRandomArbitrary(0, roomwidth);
 	this.score = 0;
+	this.ready = false;
 	this.alive = true;
 	this.online = true;
 	this.room = null;
 	this.attacking = false;
+	this.attackrechargetimer = 180;
 	players.push(this);
 	socketids.push(this.id);
 }
