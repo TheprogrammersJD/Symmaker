@@ -8470,6 +8470,14 @@ var socketids = [];
 var nicknames = [];
 var playersonline = 0;
 
+var hypo;
+var angle;
+var quadrant;
+
+var roomwidth = 1000;
+var roomheight = 1000;
+
+
 var one = 1;
 var two = 2;
 var three = 3;
@@ -8507,16 +8515,17 @@ function setup(){
 var mobile;
 	
 function draw(){
+	
 	if(two == 2){
 		console.log(deviceOrientation);
 		two++;
 	}
-	background(100, 100, 100);
+	background(0, 0, 0);
 	textAlign(CENTER, CENTER);
 	textSize(ss/10);
 	
 	if(ready == false){
-		fill(0, 0, 0);
+		fill(100, 100, 100);
 		rect(centerx, centery, ss/5, ss/10);
 		fill(255, 255, 255);
 		text("Play!", centerx, centery);
@@ -8532,12 +8541,34 @@ function draw(){
 		text("Players Online: " + playersonline, centerx, centery/3);
 	}
 	else{
-	
-	
-	
+		translate((-me.x)*(ss/100) + width/2, (-me.y)*(ss/100) + height/2);
+		console.log(me.x + ', ' + me.y);
+		for(var w = 0; w < roomwidth*(ss/100); w+=(ss/10)){
+			for(var h = 0; h < roomheight*(ss/100); h+=(ss/10)){
+				if(w < ((me.x*(ss/100))+(width/3*1))&&w > ((me.x*(ss/100))-(width/3*1))&&h < ((me.y*(ss/100))+(height/3*1))&&h > ((me.y*(ss/100))-(height/3*1))){
+					fill(255, 255, 255);
+					strokeWeight(1);
+					stroke(255, 255, 255);
+					line(w + (ss/20), h, w + (ss/30), h + (ss/20));
+					line(w + (ss/30), h + (ss/20), w - (ss/30), h + (ss/20));
+					line(w - (ss/30), h + (ss/20), w - (ss/20), h);
+					line(w - (ss/20), h, w - (ss/30), h - (ss/20));
+					line(w - (ss/30), h - (ss/20), w + (ss/30), h - (ss/20));
+					line(w + (ss/30), h - (ss/20), w + (ss/20), h);
+					strokeWeight(0);
+					//ellipse(w, h, 10, 10);
+				}
+			}
+		}
+		translate(((me.x)*(ss/100)) - width/2, ((me.y)*(ss/100)) - height/2);
+		translate(mouseX, mouseY);
+		ellipse(0, 0, 10, 10);
+		translate(-mouseX, -mouseY);
+		
+		fill(255, 255, 255);
 		text(nickname, centerx, centery);
 		if(deviceOrientation == 'landscape'){
-			text(deviceOrientation, mouseX, mouseY);
+			//text(deviceOrientation, mouseX, mouseY);
 			mobile = true;
 		}
 		else if(deviceOrientation == 'portrait'){
@@ -8566,6 +8597,24 @@ function draw(){
 			textSize(ss/15);
 			text(15, mouseX, mouseY + 300);*/
 		}
+		if(mobile == false){
+			//console.log((mouseX - centerx) + ', ' + (mouseY - centery));
+			//hypo = Math.sqrt(Math.pow(mouseX - centerx, 2) + Math.pow(mouseY - centery, 2));
+			angle = Math.atan((mouseX - centerx)/(mouseY - centery));
+			if(mouseX - centerx > 0&&mouseY - centery < 0){
+				quadrant = 1;
+			}
+			if(mouseX - centerx < 0&&mouseY - centery < 0){
+				quadrant = 2;
+			}
+			if(mouseX - centerx < 0&&mouseY - centery > 0){
+				quadrant = 3;
+			}
+			if(mouseX - centerx > 0&&mouseY - centery > 0){
+				quadrant = 4;
+			}
+			socket.emit('mrqst', angle, quadrant);
+		}
 	}
 }
 function mousePressed(){
@@ -8587,13 +8636,15 @@ function mouseClicked(){
 			if(mouseY > (centery - (ss/10))&&mouseY < (centery + (ss/10))){
 				ready = true;
 				imready();
-				fullscreen(true);
+				//fullscreen(true);
 			}
 		}
 	}
-	fill(0, 0, 255);
-	ellipse(mouseX, mouseY, ss/10, ss/10);
-	click(mouseX, mouseY);
+	if(ready == false){
+		fill(0, 0, 255);
+		ellipse(mouseX, mouseY, ss/10, ss/10);
+		click(mouseX, mouseY);
+	}
 }
 var socket = io();
 
@@ -8624,9 +8675,28 @@ socket.on('youare', function(playerobject){
 	mysid = playerobject.id;
 });
 
+socket.on('roomsize', function(roomsizew, roomsizeh){
+	roomwidth = roomsizew;
+	roomheight = roomsizeh;
+});
+
 socket.on('yourroom', function(roomnumber){
 	console.log("You are in room #" + roomnumber);
 	me.room = roomnumber;
+});
+
+socket.on('move', function(id, mvx, mvy){
+	//console.log(id + ' ' + mvx + ' ' + mvy);
+	for(var pir = 0; pir < roomplayers.length; pir++){
+		if(roomplayers[pir].id == id){
+			roomplayers[pir].x = mvx;
+			roomplayers[pir].y = mvy;
+		}
+	}
+	if(me.id == id||mysid == id){
+		me.x = mvx;
+		me.y = mvy;
+	}
 });
 
 socket.on('playersonline', function(po){
