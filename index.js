@@ -94,28 +94,33 @@ io.on('connection', function(socket){
 				//io.to(players[mp].room).emit('move', socket.id, players[mp].x, players[mp].y);
 				//socket.broadcast.emit('move', socket.id, players[mp].x, players[mp].y);
 				//io.to(socket.id).emit('move', socket.id, players[mp].x, players[mp].y);
-				if(angle < 0&&quad == 1&&players[mp].x<roomwidth&&players[mp].y>0){
+				if(angle < 0&&quad == 1&&players[mp].x<roomwidth){
 					players[mp].x -= (Math.sin(angle));
+				}
+				if(angle < 0&&quad == 1&&players[mp].y>0){
 					players[mp].y -= (Math.cos(angle));
 				}
-				
-				if(angle > 0&&quad == 2&&players[mp].x>0&&players[mp].y>0){
+				if(angle > 0&&quad == 2&&players[mp].x>0){
 					players[mp].x -= (Math.sin(angle));
+				}
+				if(angle > 0&&quad == 2&&players[mp].y>0){
 					players[mp].y -= (Math.cos(angle));
 				}
-				
-				if(angle < 0&&quad == 3&&players[mp].x>0&&players[mp].y<roomheight){
+				if(angle < 0&&quad == 3&&players[mp].x>0){
 					players[mp].x += (Math.sin(angle));
+				}
+				if(angle < 0&&quad == 3&&players[mp].y<roomheight){
 					players[mp].y += (Math.cos(angle));
 				}
-				
-				if(angle > 0&&quad == 4&&players[mp].x<roomwidth&&players[mp].y<roomheight){
+				if(angle > 0&&quad == 4&&players[mp].x<roomwidth){
 					players[mp].x += (Math.sin(angle));
+				}
+				if(angle > 0&&quad == 4&&players[mp].y<roomheight){
 					players[mp].y += (Math.cos(angle));
 				}
-				
 				
 				socket.emit('move', socket.id, players[mp].x, players[mp].y);
+				io.to('room' + players[mp].room).emit('move', socket.id, players[mp].x, players[mp].y);
 			}
 		}
 	});
