@@ -8474,6 +8474,10 @@ var hypo;
 var angle;
 var quadrant;
 
+var touchstartx;
+var touchstarty;
+var touchwhich;
+
 var roomwidth = 1000;
 var roomheight = 1000;
 
@@ -8542,9 +8546,9 @@ function draw(){
 	}
 	else{
 		translate((-me.x)*(ss/100) + width/2, (-me.y)*(ss/100) + height/2);
-		console.log(me.x + ', ' + me.y);
-		for(var w = 0; w < roomwidth*(ss/100); w+=(ss/10)){
-			for(var h = 0; h < roomheight*(ss/100); h+=(ss/10)){
+		//console.log(me.x + ', ' + me.y);
+		for(var w = 0; w < (roomwidth+1)*(ss/100); w+=(ss/10)){
+			for(var h = 0; h < (roomheight+1)*(ss/100); h+=(ss/10)){
 				if(w < ((me.x*(ss/100))+(width/3*1))&&w > ((me.x*(ss/100))-(width/3*1))&&h < ((me.y*(ss/100))+(height/3*1))&&h > ((me.y*(ss/100))-(height/3*1))){
 					fill(255, 255, 255);
 					strokeWeight(1);
@@ -8561,12 +8565,28 @@ function draw(){
 			}
 		}
 		translate(((me.x)*(ss/100)) - width/2, ((me.y)*(ss/100)) - height/2);
+		
+		
+		
+		translate(-(me.x)*(ss/100) + width/2, -(me.y)*(ss/100) + height/2);
+		for(var rp = 0; rp < roomplayers.length; rp++){
+			if(roomplayers[rp].alive == true){
+				fill(255, 255, 255);
+				ellipse(roomplayers[rp].x*(ss/100), roomplayers[rp].y*(ss/100), ss/10, ss/10);
+				text(roomplayers[rp].name, roomplayers[rp].x*(ss/100), roomplayers[rp].y*(ss/100) - ss/10);
+			}
+		}
+		translate((me.x)*(ss/100) - width/2, (me.y)*(ss/100) - height/2);
+		
+		
+		
 		translate(mouseX, mouseY);
 		ellipse(0, 0, 10, 10);
 		translate(-mouseX, -mouseY);
 		
 		fill(255, 255, 255);
-		text(nickname, centerx, centery);
+		ellipse(centerx, centery, ss/10, ss/10);
+		text(nickname, centerx, centery - ss/10);
 		if(deviceOrientation == 'landscape'){
 			//text(deviceOrientation, mouseX, mouseY);
 			mobile = true;
@@ -8615,7 +8635,59 @@ function draw(){
 			}
 			socket.emit('mrqst', angle, quadrant);
 		}
+		if(mobile == true){
+			for(var t = 0; t < touches.length; t++){
+				if(touchwhich == t){
+					angle = Math.atan((touches[t].x - touchstartx)/(touches[t].y - touchstarty));
+					
+					if(touches[t].x - touchstartx > 0&&touches[t].y - touchstarty < 0){
+						quadrant = 1;
+					}
+					if(touches[t].x - touchstartx < 0&&touches[t].y - touchstarty < 0){
+						quadrant = 2;
+					}
+					if(touches[t].x - touchstartx < 0&&touches[t].y - touchstarty > 0){
+						quadrant = 3;
+					}
+					if(touches[t].x - touchstartx > 0&&touches[t].y - touchstarty > 0){
+						quadrant = 4;
+					}
+					
+					socket.emit('mrqst', angle, quadrant);
+				}
+			}
+		}
 	}
+}
+function touchStarted(pq){
+	if(ready == false){
+		if(mouseX > (centerx - (ss/5))&&mouseX < (centerx + (ss/5))){
+			if(mouseY > (centery - (ss/10))&&mouseY < (centery + (ss/10))){
+				ready = true;
+				imready();
+				//fullscreen(true);
+			}
+		}
+	}
+	if(ready == false){
+		fill(0, 0, 255);
+		ellipse(mouseX, mouseY, ss/10, ss/10);
+		click(mouseX, mouseY);
+	}
+	if(mouseX > centerx){
+		touchstartx = mouseX;
+		touchstarty = mouseY;
+		touchwhich = pq.which;
+		//console.log(touchstartx + ", " + touchstarty);
+	}
+	return false;
+}
+function touchEnded(pq){
+	if(touchwhich == pq.which){
+		touchwhich;
+		console.log(touchwhich);
+	}
+	return false;
 }
 function mousePressed(){
 	
@@ -8693,7 +8765,7 @@ socket.on('move', function(id, mvx, mvy){
 			roomplayers[pir].y = mvy;
 		}
 	}
-	if(me.id == id||mysid == id){
+	if(me.id == id){
 		me.x = mvx;
 		me.y = mvy;
 	}
