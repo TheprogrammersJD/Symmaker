@@ -1,8 +1,8 @@
 {
-  "name": "Name",
-  "description": "A multiplayer .IO game",
-  "website": "https://github.com/TheprogrammersJD/Woffers.io",
-  "repository": "https://github.com/TheprogrammersJD/Woffers.io",
+  "name": "Symmaker",
+  "description": "A symmetrical drawing application",
+  "website": "https://github.com/TheprogrammersJD/Symmaker",
+  "repository": "https://github.com/TheprogrammersJD/Symmaker",
   "success_url": "/",
   "keywords": [
     "node",
